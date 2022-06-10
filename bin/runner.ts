@@ -3,8 +3,8 @@ import { EventStream, LDESClient, newEngine } from "@treecg/actor-init-ldes-clie
 import { loadState, saveState } from "../lib/utils";
 import { gipodContext } from "../lib/gipodContext";
 
-const FOLDER_OF_STATE = `./.ldes`;
-const LOCATION_OF_STATE = `./.ldes/state.json`;
+const FOLDER_OF_STATE = `${__dirname}/.ldes`;
+const LOCATION_OF_STATE = `${FOLDER_OF_STATE}/state.json`;
 
 const run = async (): Promise<void> => {
   const url = 'https://private-api.gipod.beta-vlaanderen.be/api/v1/ldes/mobility-hindrances';
@@ -43,6 +43,12 @@ const run = async (): Promise<void> => {
     dbClient.close();
   });
   ldes.on('error', console.error);
+
+  // Pause when exiting with CTRL+C
+  process.on('SIGINT', () => {
+    console.log("Caught interrupt signal. Pausing the LDES client to save state.");
+    ldes.pause();
+  });
 }
 
 run().catch(error => console.error(error));
