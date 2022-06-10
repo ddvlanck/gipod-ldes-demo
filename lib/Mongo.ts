@@ -39,7 +39,7 @@ export class Mongo {
     return Mongo.instance;
   }
 
-  public get client(): MongoClient {
+  private get client(): MongoClient {
     if (!this._client) {
       new Error('Trying to access mongo client before it was initialized.');
     }

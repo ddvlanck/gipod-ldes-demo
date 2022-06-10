@@ -1,15 +1,15 @@
 import { Mongo } from "../lib/Mongo"
 import { EventStream, LDESClient, newEngine } from "@treecg/actor-init-ldes-client";
-import { loadState, saveState } from "../lib/utils";
+import { loadState, onLdesClientPauzed, saveState } from "../lib/utils";
 import { gipodContext } from "../lib/gipodContext";
 
-const FOLDER_OF_STATE = `${__dirname}/.ldes`;
-const LOCATION_OF_STATE = `${FOLDER_OF_STATE}/state.json`;
+export const FOLDER_OF_STATE = `${__dirname}/.ldes`;
+export const LOCATION_OF_STATE = `${FOLDER_OF_STATE}/state.json`;
 
 const run = async (): Promise<void> => {
   const url = 'https://private-api.gipod.beta-vlaanderen.be/api/v1/ldes/mobility-hindrances';
 
-  // TODO: add JSON-LD context option ocne it is fixed in the client
+  // TODO: add JSON-LD context option once it is fixed in the client
   //FIXME: locally change jsonLdContext type from ContextDefinition to any
   let options = {
     "pollingInterval": 5000, // millis
@@ -34,20 +34,15 @@ const run = async (): Promise<void> => {
   }
 
   ldes.on('data', (member) => dbClient.handleMember(member));
-  ldes.on('pause', () => {
-    saveState(FOLDER_OF_STATE, LOCATION_OF_STATE, ldes.exportState())
-    dbClient.close();
-  });
-  ldes.on('end', () => {
-    saveState(FOLDER_OF_STATE, LOCATION_OF_STATE, ldes.exportState())
-    dbClient.close();
-  });
+  ldes.on('pause', () => onLdesClientPauzed(ldes, dbClient));
+  ldes.on('end', () => onLdesClientPauzed(ldes, dbClient));
   ldes.on('error', console.error);
 
   // Pause when exiting with CTRL+C
-  process.on('SIGINT', () => {
+  process.on('SIGINT', async () => {
     console.log("Caught interrupt signal. Pausing the LDES client to save state.");
     ldes.pause();
+    await dbClient.close();
   });
 }
 
