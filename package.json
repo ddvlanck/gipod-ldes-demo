@@ -1,0 +1,21 @@
+{
+  "name": "ldes-test-suite",
+  "version": "0.0.0",
+  "description": "Parses an LDES, applies a version materialization and stores it in a MongoDB",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "author": "Dwight Van Lancker",
+  "license": "MIT",
+  "dependencies": {
+    "@treecg/actor-init-ldes-client": "^2.5.11",
+    "mongodb": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.41",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.3"
+  }
+}
