@@ -6,11 +6,11 @@ import { gipodContext } from "../lib/gipodContext";
 export const FOLDER_OF_STATE = `${__dirname}/.ldes`;
 export const LOCATION_OF_STATE = `${FOLDER_OF_STATE}/state.json`;
 
+
+
 const run = async (): Promise<void> => {
   const url = 'https://private-api.gipod.beta-vlaanderen.be/api/v1/ldes/mobility-hindrances';
 
-  // TODO: add JSON-LD context option once it is fixed in the client
-  //FIXME: locally change jsonLdContext type from ContextDefinition to any
   let options = {
     "pollingInterval": 5000, // millis
     "representation": "Object",
