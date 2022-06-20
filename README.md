@@ -28,6 +28,11 @@ When this issue occurs, just restart the `mongo-express` container:
 
 ### 2. Running the script
 
+First, install the necessary packages with the following command:
+```bash
+> npm install
+```
+
 The code is written in Typescript and must be compiled to Javascript in order to execute it:
 ```bash
 > npm run build
@@ -35,7 +40,7 @@ The code is written in Typescript and must be compiled to Javascript in order to
 
 When the code is compiled to Javascript, navigate to the `bin` folder and execute the following command:
 ```bash
-> node runner.js
+> node --max-old-space-size=8192 runner.js
 ```
 
 #### What the script does

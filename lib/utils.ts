@@ -3,7 +3,10 @@ import { existsSync, readFileSync, mkdirSync, writeFileSync } from "fs";
 import { FOLDER_OF_STATE, LOCATION_OF_STATE } from "../bin/runner";
 import { Mongo } from "./Mongo";
 
-export async function onLdesClientPauzed(ldes: EventStream, dbClient: Mongo): Promise<void> {
+export async function onLdesClientPauzed(ldes: EventStream, dbClient: Mongo, tasks: Promise<void>[]): Promise<void> {
+  // Waiting for all tasks to be finished before closing the client.
+  await Promise.all(tasks);
+
   saveState(FOLDER_OF_STATE, LOCATION_OF_STATE, ldes.exportState());
   await dbClient.close();
 }
