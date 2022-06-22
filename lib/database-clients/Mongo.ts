@@ -1,4 +1,5 @@
 import { MongoClient } from "mongodb";
+import { IDatabaseClient } from "../IDatabaseClient";
 
 const DB_URL = `mongodb://admin:admin@localhost:27017`;
 
@@ -23,7 +24,7 @@ const interestedConsequences = [
   "api/v1/taxonomies/mobility-hindrance/consequencetypes/427bc6a6-619c-482d-934c-bda986df18d1"
 ];
 
-export class Mongo {
+export class Mongo implements IDatabaseClient {
   private static instance: Mongo;
   private readonly _client: MongoClient;
 
