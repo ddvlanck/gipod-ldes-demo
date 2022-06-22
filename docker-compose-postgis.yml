@@ -1,0 +1,23 @@
+version: "3.8"
+services:
+  db:
+    build: ./db/postgis
+    container_name: ldes-postgis
+    environment:
+      POSTGRES_DB: mobility_hindrance
+      POSTGRES_USER: ldes
+      POSTGRES_PASSWORD: ldes
+    ports:
+      - 5432:5432
+  dba:
+    image: dpage/pgadmin4:latest
+    container_name: ldes-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ldes@ldes.be
+      PGADMIN_DEFAULT_PASSWORD: ldes
+    ports:
+      - 8001:80
+    depends_on:
+      - db
+    links:
+      - db
