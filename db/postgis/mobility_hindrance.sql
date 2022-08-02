@@ -11,13 +11,13 @@ CREATE TABLE ldes.mobility_hindrances
   "zone_consequence" json,
   "zone_geometry_wkt" geometry,
   "zone_type" character varying,
-  "period_start" character varying,
-  "period_end" character varying,
+  "period_start" timestamp with time zone,
+  "period_end" timestamp with time zone,
   "status" character varying,
-  "generated_at_time" character varying,
-  "event_name" character varying,
+  "generated_at_time" timestamp,
+  "last_event_name" character varying,
   "entity_id" character varying NOT NULL,
-  "created_on" character varying NOT NULL,
+  "created_on" timestamp with time zone NOT NULL,
   PRIMARY KEY ("version_id")
 )
 

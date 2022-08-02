@@ -29,7 +29,7 @@ services:
     links:
       - db
   geoserver:
-    image: kartoza/geoserver
+    build: ./geoserver
     container_name: ldes-postgis-geoserver
     ports:
       - 8002:8080
