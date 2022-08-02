@@ -2,7 +2,6 @@ import { Pool, PoolClient } from "pg"
 import { IDatabaseClient } from "../IDatabaseClient";
 import type * as RDF from '@rdfjs/types';
 import { DataFactory } from "rdf-data-factory";
-const wktParser = require('wkt-parser');
 
 export class Postgis implements IDatabaseClient {
   private static instance: Postgis;
