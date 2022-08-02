@@ -1,9 +1,14 @@
 import { EventStream } from "@treecg/actor-init-ldes-client";
-import { existsSync, readFileSync, mkdirSync, writeFileSync } from "fs";
-import { FOLDER_OF_STATE, LOCATION_OF_STATE } from "../bin/runner";
-import { Mongo } from "./Mongo";
+import { existsSync, readFileSync, mkdirSync, writeFileSync, createReadStream } from "fs";
+import { FOLDER_OF_STATE, LOCATION_OF_STATE } from "../lib/AppRunner";
+import { Mongo } from "./database-clients/Mongo";
+import { Quad } from '@rdfjs/types';
+import rdfParser from "rdf-parse";
+import * as N3 from 'n3';
+import { DataFactory } from "n3";
+import { IDatabaseClient } from "./IDatabaseClient";
 
-export async function onLdesClientPauzed(ldes: EventStream, dbClient: Mongo, tasks: Promise<void>[]): Promise<void> {
+export async function onLdesClientPauzed(ldes: EventStream, dbClient: IDatabaseClient, tasks: Promise<void>[]): Promise<void> {
   // Waiting for all tasks to be finished before closing the client.
   await Promise.all(tasks);
 

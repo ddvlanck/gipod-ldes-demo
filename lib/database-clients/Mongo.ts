@@ -47,6 +47,18 @@ export class Mongo implements IDatabaseClient {
     return this._client;
   }
 
+  public async provision(): Promise<void> {
+    console.log('Provisioning not needed for MongoDb');
+  }
+
+  public async connect(): Promise<MongoClient> {
+    return this.client.connect();
+  }
+
+  public async close(): Promise<void> {
+    return this.client.close();
+  }
+
   public async handleMember(member: any): Promise<void> {
     const mobilityHindrance = member.object;
     const entityId = mobilityHindrance.isVersionOf;
@@ -94,14 +106,6 @@ export class Mongo implements IDatabaseClient {
         await this.client.close();
       }
     }
-  }
-
-  public async connect(): Promise<MongoClient> {
-    return this.client.connect();
-  }
-
-  public async close(): Promise<void> {
-    return this.client.close();
   }
 
   private hindranceHasInterestingConsequence(mobilityHindrance: any): boolean {

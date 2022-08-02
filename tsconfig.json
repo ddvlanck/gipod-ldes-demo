@@ -20,7 +20,7 @@
   "include": [
     "bin/**/*",
     "lib/**/*"
-  ],
+, "bin/run.ts"  ],
   "exclude": [
     "**/node_modules",
     "**/test/*"

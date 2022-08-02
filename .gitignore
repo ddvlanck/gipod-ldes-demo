@@ -8,3 +8,4 @@ lib/**/*.js
 lib/**/*.js.map
 
 package-lock.json
+data/*
