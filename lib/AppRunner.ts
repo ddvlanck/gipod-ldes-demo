@@ -9,6 +9,7 @@ import { Postgis } from "./database-clients/Postgis";
 import { gipodContext } from "./gipodContext";
 import moment from "moment";
 import * as cron from 'node-cron';
+import { Neo4j } from "./database-clients/Neo4j";
 
 export const FOLDER_OF_STATE = `${__dirname}/.ldes`;
 export const LOCATION_OF_STATE = `${FOLDER_OF_STATE}/state.json`;
@@ -31,25 +32,26 @@ export class AppRunner {
     const startDate = new Date(Date.now());
     const startingMinute = moment(startDate).add(65, 'seconds').toDate().getMinutes();
 
-    cron.schedule(`${startingMinute} * * * *`, async () => {
-      const app = await this.createCli(argv);
-      try {
-        app.init().then(() => app.start())
-      } catch (error: unknown) {
-        await app.stop();
-      }
+    /*cron.schedule(`${startingMinute} * * * *`, async () => {*/
+    const app = await this.createCli(argv);
+    try {
+      app.init().then(() => app.start())
+    } catch (error: unknown) {
+      console.log(error);
+      await app.stop();
+    }
 
-      setTimeout(() => {
-        app.stop();
-      }, 3_300_000);  // 55 minutes
-    })
+    /*setTimeout(() => {
+      app.stop();
+    }, 3_300_000);  // 55 minutes
+  })*/
   }
 
   public async createCli(argv: CliArgv = process.argv): Promise<App> {
     const yargv = yargs(argv.slice(2))
       .usage('node ./bin/cli-runner.js [args]')
       .option('u', { alias: 'url', describe: 'The URL of the LDES endpoint', type: 'string' })
-      .option('d', { alias: 'databaseType', describe: 'The database to which the LDES members will be written', choices: ['mongo', 'postgis'] })
+      .option('d', { alias: 'databaseType', describe: 'The database to which the LDES members will be written', choices: ['mongo', 'postgis', 'neo4j'] })
       .demandOption(['u', 'd'])
       .help('h')
       .alias('h', 'help');
@@ -80,6 +82,9 @@ export class AppRunner {
       case 'postgis':
         return Postgis.getInstance();
 
+      case 'neo4j':
+        return Neo4j.getInstance();
+
       default:
         throw new Error(`Database type ${type} is not supported.`)
     }
@@ -93,11 +98,12 @@ export class AppRunner {
         break;
 
       case 'postgis':
+      case 'neo4j':
         representation = 'Quads';
         break;
 
       default:
-        throw new Error(`Database type ${type} is not supported.`)
+        throw new Error(`Ldes option for database ${type} not supported.`)
     }
 
     return {

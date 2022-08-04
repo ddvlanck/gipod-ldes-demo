@@ -15,6 +15,7 @@
     "moment": "^2.29.3",
     "mongodb": "^4.7.0",
     "n3": "^1.16.2",
+    "neo4j-driver": "^4.4.7",
     "node-cron": "^3.0.1",
     "pg": "^8.7.3",
     "rdf-data-factory": "^1.1.0",
