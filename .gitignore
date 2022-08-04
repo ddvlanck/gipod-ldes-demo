@@ -9,3 +9,4 @@ lib/**/*.js.map
 
 package-lock.json
 neo4j/*
+.ldes
