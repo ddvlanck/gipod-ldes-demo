@@ -241,7 +241,7 @@ export class Postgis implements IDatabaseClient {
         "period_end",
         "status",
         "generated_at_time",
-        "event_name",
+        "last_event_name",
         "entity_id",
         "created_on")
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,ST_GeomFromText($10),$11,$12,$13,$14,$15,$16,$17,$18)`;

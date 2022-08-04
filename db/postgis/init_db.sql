@@ -1,1 +1,2 @@
 CREATE SCHEMA ldes;
+CREATE EXTENSION postgis SCHEMA ldes;
