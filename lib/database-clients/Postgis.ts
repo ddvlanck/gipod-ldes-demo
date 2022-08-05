@@ -58,12 +58,11 @@ export class Postgis implements IDatabaseClient {
     }
 
     const identifierAssignedByName = quads.find(x => x.predicate.equals(this.df.namedNode('http://www.w3.org/ns/adms#schemaAgency')))?.object.value;
-    const workCausingHindrance = quads.find(x => x.predicate.equals(this.df.namedNode('https://data.vlaanderen.be/ns/mobiliteit#Inname.heeftGevolg')))?.subject.value;
     const description = quads.find(x => x.predicate.equals(this.df.namedNode('http://purl.org/dc/terms/description')))?.object.value;
 
     const ownerObject = quads.find(x => x.predicate.equals(this.df.namedNode('https://data.vlaanderen.be/ns/mobiliteit#beheerder')))?.object;
     const ownerId = quads.find(x => x.subject.equals(ownerObject) && x.predicate.equals(this.df.namedNode('http://purl.org/dc/terms/isVersionOf')))?.object.value;
-    const ownerPrefLabel = quads.find(x => x.subject.equals(ownerObject) && x.predicate.equals(this.df.namedNode('http://purl.org/dc/terms/isVersionOf')))?.object.value;
+    const ownerPrefLabel = quads.find(x => x.subject.equals(ownerObject) && x.predicate.equals(this.df.namedNode('http://www.w3.org/2004/02/skos/core#prefLabel')))?.object.value;
 
     const zoneId = quads.find(x =>
       x.predicate.equals(this.df.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')) &&
@@ -72,15 +71,19 @@ export class Postgis implements IDatabaseClient {
 
     const consequenceObjects = quads.filter(x => x.predicate.equals(this.df.namedNode('https://data.vlaanderen.be/ns/mobiliteit#gevolg'))).map(x => x.object);
     const consequences: any[] = [];
+    const consequenceLabels: string[] = [];
 
     if (consequenceObjects.length > 0) {
       consequenceObjects.forEach(object => {
         const prefLabel = quads.find(x => x.subject.equals(object) && x.predicate.equals(this.df.namedNode('http://www.w3.org/2004/02/skos/core#prefLabel')));
-
         consequences.push({
           '@id': object.value,
-          prefLabel: prefLabel?.value,
+          prefLabel: prefLabel?.object.value,
         });
+
+        if (prefLabel) {
+          consequenceLabels.push(prefLabel.object.value);
+        }
       });
     }
 
@@ -96,9 +99,17 @@ export class Postgis implements IDatabaseClient {
 
     const zoneType = quads.find(x => x.predicate.equals(this.df.namedNode('https://data.vlaanderen.be/ns/mobiliteit#Zone.type')))?.object.value;
 
-    // FIXME: check when to add time schedule (when period is null?)
     const periodStart = quads.find(x => x.predicate.equals(this.df.namedNode('http://data.europa.eu/m8g/startTime')))?.object.value;
     const periodEnd = quads.find(x => x.predicate.equals(this.df.namedNode('http://data.europa.eu/m8g/endTime')))?.object.value;
+
+    const timeScheduleStart = quads.find(x => x.predicate.equals(this.df.namedNode('http://schema.org/startDate')))?.object.value;
+    const timeScheduleEnd = quads.find(x => x.predicate.equals(this.df.namedNode('http://schema.org/startDate')))?.object.value;
+    const timeScheduleRepeatFrequency = quads.find(x => x.predicate.equals(this.df.namedNode('http://schema.org/repeatFrequency')))?.object.value;
+    const timeScheduleStartTime = quads.find(x => x.predicate.equals(this.df.namedNode('http://schema.org/startTime')))?.object.value;
+    const timeScheduleEndTime = quads.find(x => x.predicate.equals(this.df.namedNode('http://schema.org/endTime')))?.object.value;
+    const timeScheduleByDay = quads.filter(x => x.predicate.equals(this.df.namedNode('http://schema.org/byDay'))).map(x => x.object.value);
+    const timeScheduleByMonth = quads.filter(x => x.predicate.equals(this.df.namedNode('http://schema.org/byMonth')))?.map(x => parseInt(x.object.value));
+    const timeScheduleByMonthDay = quads.filter(x => x.predicate.equals(this.df.namedNode('http://schema.org/byMonthDay')))?.map(x => parseInt(x.object.value));
 
     const statusId = quads.find(x => x.predicate.equals(this.df.namedNode('https://data.vlaanderen.be/ns/mobiliteit#Inname.status')))?.object;
     let statusLabel;
@@ -128,12 +139,12 @@ export class Postgis implements IDatabaseClient {
         versionId,
         parseInt(gipodId),
         identifierAssignedByName,
-        workCausingHindrance,
         description,
         ownerId,
         ownerPrefLabel,
         zoneId,
         JSON.stringify(consequences),
+        consequenceLabels,
         wkt,
         zoneType,
         periodStart,
@@ -143,6 +154,14 @@ export class Postgis implements IDatabaseClient {
         eventName,
         entityId,
         createdOn,
+        timeScheduleStart,
+        timeScheduleEnd,
+        timeScheduleRepeatFrequency,
+        timeScheduleStartTime,
+        timeScheduleEndTime,
+        timeScheduleByDay,
+        timeScheduleByMonth,
+        timeScheduleByMonthDay
       );
 
       await this.updateVersionMetadata(entityId, createdOn);
@@ -188,31 +207,18 @@ export class Postgis implements IDatabaseClient {
         UPDATE SET timestamp = EXCLUDED.timestamp`;
 
     await client.query(UPSERT, [entityId, createdOn]).then(() => client.release());
-
-    /*const UPDATE = `
-      UPDATE ldes.version_metadata
-      SET timestamp = $1
-      WHERE entity_id = $2`;
-
-    const INSERT = `
-      INSERT INTO ldes.version_metadata ("timestamp","entity_id")
-      VALUES ($1,$2);`
-
-    const query = insert ? INSERT : UPDATE;
-
-    await client.query(query, [createdOn, entityId]).then(() => client.release());*/
   }
 
   private async addMobilityHindrance(
     versionId: string,
     gipodId: number,
     identifierAssignedByName: string | undefined,
-    isConsequenceOf: string | undefined,
     description: string | undefined,
     ownerIsVersionOf: string | undefined,
     ownerPreferredName: string | undefined,
     zoneId: string | undefined,
     zoneConsequence: string | undefined,
+    zoneConsequenceLabel: string[],
     zoneWkt: string | undefined,
     zoneType: string | undefined,
     periodStart: string | undefined,
@@ -222,19 +228,27 @@ export class Postgis implements IDatabaseClient {
     eventName: string | undefined,
     entityId: string,
     createdOn: string,
+    timeScheduleStart: string | undefined,
+    timeScheduleEnd: string | undefined,
+    timeScheduleRepeatFrequency: string | undefined,
+    timeScheduleStartTime: string | undefined,
+    timeScheduleEndTime: string | undefined,
+    timeScheduleByDay: string[],
+    timeScheduleByMonth: number[],
+    timeScheduleByMonthDay: number[]
   ): Promise<any> {
     const client = await this.pool.connect();
     const ADD_MOBILITY_HINDRANCE = `
       INSERT INTO ldes.mobility_hindrances (
         "version_id",
         "gipod_id",
-        "identifier_assignedByName",        
-        "is_consequence_of",
+        "identifier_assigned_by_name",
         "description",
         "owner_is_version_of",
         "owner_preferred_name",
         "zone_id",
         "zone_consequence",
+        "zone_consequence_label",
         "zone_geometry_wkt",
         "zone_type",
         "period_start",
@@ -243,10 +257,42 @@ export class Postgis implements IDatabaseClient {
         "generated_at_time",
         "last_event_name",
         "entity_id",
-        "created_on")
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,ST_GeomFromText($10),$11,$12,$13,$14,$15,$16,$17,$18)`;
-
-    // TODO: implement upsert
+        "created_on",
+        "time_schedule_start_date",
+        "time_schedule_end_date",
+        "time_schedule_repeat_frequency",
+        "time_schedule_start_time",
+        "time_schedule_end_time",
+        "time_schedule_by_day",
+        "time_schedule_by_month",
+        "time_schedule_by_month_day")
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,ST_GeomFromText($10),$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)
+      ON CONFLICT (entity_id)
+      DO UPDATE SET
+        version_id = EXCLUDED.version_id,
+        gipod_id = EXCLUDED.gipod_id,
+        identifier_assigned_by_name = EXCLUDED.identifier_assigned_by_name,
+        description = EXCLUDED.description,
+        owner_is_version_of = EXCLUDED.owner_is_version_of,
+        owner_preferred_name = EXCLUDED.owner_preferred_name,
+        zone_id = EXCLUDED.zone_id,
+        zone_consequence = EXCLUDED.zone_consequence,
+        zone_consequence_label = EXCLUDED.zone_consequence_label,
+        zone_type = EXCLUDED.zone_type,
+        period_start = EXCLUDED.period_start,
+        period_end = EXCLUDED.period_end,
+        status = EXCLUDED.status,
+        generated_at_time = EXCLUDED.generated_at_time,
+        last_event_name = EXCLUDED.last_event_name,
+        created_on = EXCLUDED.created_on,
+        time_schedule_start_date = EXCLUDED.time_schedule_start_date,
+        time_schedule_end_date = EXCLUDED.time_schedule_end_date,
+        time_schedule_repeat_frequency = EXCLUDED.time_schedule_repeat_frequency,
+        time_schedule_start_time = EXCLUDED.time_schedule_start_time,
+        time_schedule_end_time = EXCLUDED.time_schedule_end_time,
+        time_schedule_by_day = EXCLUDED.time_schedule_by_day,
+        time_schedule_by_month = EXCLUDED.time_schedule_by_month,
+        time_schedule_by_month_day = EXCLUDED.time_schedule_by_month_day`;
 
     try {
       await client.query(
@@ -255,12 +301,12 @@ export class Postgis implements IDatabaseClient {
           versionId,
           gipodId,
           identifierAssignedByName,
-          isConsequenceOf,
           description,
           ownerIsVersionOf,
           ownerPreferredName,
           zoneId,
           zoneConsequence,
+          zoneConsequenceLabel,
           zoneWkt,
           zoneType,
           periodStart,
@@ -269,7 +315,15 @@ export class Postgis implements IDatabaseClient {
           generatedAtTime,
           eventName,
           entityId,
-          createdOn
+          createdOn,
+          timeScheduleStart,
+          timeScheduleEnd,
+          timeScheduleRepeatFrequency,
+          timeScheduleStartTime,
+          timeScheduleEndTime,
+          timeScheduleByDay,
+          timeScheduleByMonth,
+          timeScheduleByMonthDay,
         ]
       );
     } catch (err: unknown) {

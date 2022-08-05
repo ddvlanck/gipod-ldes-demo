@@ -21,7 +21,10 @@ export class App {
     this.ldes.on('data', (member) => tasks.push(this.dbClient.handleMember(member)));
     this.ldes.on('pause', () => onLdesClientPauzed(this.ldes, this.dbClient, tasks));
     this.ldes.on('end', () => onLdesClientPauzed(this.ldes, this.dbClient, tasks));
-    this.ldes.on('error', console.error);
+    this.ldes.on('error', (error) => {
+      console.log(error);
+      onLdesClientPauzed(this.ldes, this.dbClient, tasks);
+    });
   }
 
   public async stop(): Promise<void> {

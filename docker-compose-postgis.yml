@@ -33,8 +33,6 @@ services:
     container_name: ldes-postgis-geoserver
     ports:
       - 8002:8080
-    volumes:
-        - geoserver-data:/opt/geoserver/data_dir
     environment:
       - GEOSERVER_ADMIN_PASSWORD=ldes
       - GEOSERVER_ADMIN_USER=ldes
