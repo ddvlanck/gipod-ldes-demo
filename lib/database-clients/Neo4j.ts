@@ -1,13 +1,17 @@
 import { IDatabaseClient } from "../IDatabaseClient";
 import { Driver, driver, auth, Session } from 'neo4j-driver';
 import * as N3 from 'n3';
+import { configuration } from "../Configuration";
 
 export class Neo4j implements IDatabaseClient {
   private static instance: Neo4j;
   private readonly _client: Driver;
 
   private constructor() {
-    this._client = driver('neo4j://localhost', auth.basic('neo4j', 'ldes'));
+    this._client = driver(
+      configuration.database.connectionString,
+      auth.basic(configuration.database.user, configuration.database.password),
+    );
   }
 
   public static getInstance(): Neo4j {

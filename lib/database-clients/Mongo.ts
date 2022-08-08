@@ -1,7 +1,6 @@
 import { MongoClient } from "mongodb";
+import { configuration } from "../Configuration";
 import { IDatabaseClient } from "../IDatabaseClient";
-
-const DB_URL = `mongodb://admin:admin@localhost:27017`;
 
 // Only hindrances that have a consequence that matches one of the list below are added to the database
 const interestedConsequences = [
@@ -29,7 +28,7 @@ export class Mongo implements IDatabaseClient {
   private readonly _client: MongoClient;
 
   private constructor() {
-    this._client = new MongoClient(DB_URL);
+    this._client = new MongoClient(configuration.database.connectionString);
   }
 
   public static getInstance(): Mongo {
