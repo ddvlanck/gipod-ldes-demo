@@ -9,8 +9,9 @@ This demo uses the LDES client and replicates the GIPOD mobility hindrance LDES 
 Depending on which backend you want to use, a different _docker-compose_ file has to be executed:
 - Mongo: `docker-compose -f docker-compose-mongo.yml up`
 - Postgis `docker-compose -f docker-compose-postgis.yml up`
+  Neo4j `docker-compose -f docker-compose-neo4j.yml up`
 
-Both docker-compose files will initiate two containers. A container containing the actual database (mongo or postgis), and a second one that provides a Web-based admin interface (Mongo Express or PgAdmin) that allows easy interaction with the database.
+All docker-compose files will initiate at least two containers. A container containing the actual database (mongo, postgis or neo4j), and a second one that provides a Web-based admin interface (Mongo Express, PgAdmin or Neo4j Browser) that allows easy interaction with the database.
 
 #### Mongo as database
 
@@ -22,6 +23,9 @@ The init script will create a new database called `ldes` with two collections in
 The init script will create a new database called `ldes` that contains two tables:
 - `version_metadata` → contains the entity URIs along with the timestamp of the most recent version
 - `mobility_hindrances` → contains the mobility hindrances
+
+#### Neo4j as database
+Neo4j will be configured to import RDF. The RDF can be queries through Neo4j Browser or by connecting to Neo4j with another application.
 
 #### Troubleshooting
 
@@ -44,16 +48,33 @@ The code is written in Typescript and must be compiled to Javascript in order to
 > npm run build
 ```
 
-When the code is compiled to Javascript, navigate to the `bin` folder and execute the following command:
-```bash
-> node --max-old-space-size=8192 cli-runner.js -u {GIPOD-LDES-URL} -d {DATABASE}
-```
+Before the script can be executed, a configuration file has to be made. The root folder already contains the configuration file and the possible fields that can be used:
+- `ldes` → The URL of the GIPOD LDES
+- `database.type` → The database that should be used to replicate to LDES to. Possible values are `mongo`, `postgis` and `neo4j`
 
-Options for database parameter are `mongo` or `postgis`.
+Depending on the chosen database type, additional database configuration fields must be used:
+- **Mongo**
+  - `database.connection_string` → Value: `mongodb://admin:admin@localhost:27017`
+- **Neo4j**
+  - `database.connection_string` → Value: `neo4j://localhost`
+  - `database.user` → Value: `neo4j`
+  - `database.password` → Value: `ldes`
+- **PostGIS**
+  - `database.user` → Value: `ldes`
+  - `database.password` → Value: `ldes`
+  - `database.host` → Value: `localhost`
+  - `database.port` → Value: `5432`
+  - `database.database` → Value: `mobility_hindrance`
+
+
+When the code is compiled to Javascript and configuration file is filled out, navigate to the `bin` folder and execute the following command:
+```bash
+> node --max-old-space-size=8192 cli-runner.js
+```
 
 #### What the script does
 
-The script will create a database and LDES client. If the LDES client has had a previous run, the previous state will be imported into the current LDES client, so that it does not start iterating the LDES from the beginning, but from the point where it previously stopped.
+The script will create a database client and LDES client. If the LDES client has had a previous run, the previous state will be imported into the current LDES client, so that it does not start iterating the LDES from the beginning, but from the point where it previously stopped.
 
 **For this demo, we simulate that we only want the latest version of every object.**
 
