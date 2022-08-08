@@ -20,6 +20,8 @@ export default class Configuration {
     if ('DB_PORT' in process.env) {
       this.database.port = parseInt(process.env.DB_PORT!);
     }
+
+    this.database.connectionString = process.env.DB_CONNECTION_STRING || this.database.connectionString;
   }
 }
 

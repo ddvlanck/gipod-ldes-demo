@@ -7,11 +7,13 @@ This demo uses the LDES client and replicates the GIPOD mobility hindrance LDES 
 ### 1. Init the database
 
 Depending on which backend you want to use, a different _docker-compose_ file has to be executed:
-- Mongo: `docker-compose -f docker-compose-mongo.yml up`
-- Postgis `docker-compose -f docker-compose-postgis.yml up`
-  Neo4j `docker-compose -f docker-compose-neo4j.yml up`
+- Mongo: `docker-compose -f docker-compose-mongo.yml up (--build)`
+- PostGIS `docker-compose -f docker-compose-postgis.yml up (--build)`
+  Neo4j `docker-compose -f docker-compose-neo4j.yml up --build`
 
 All docker-compose files will initiate at least two containers. A container containing the actual database (mongo, postgis or neo4j), and a second one that provides a Web-based admin interface (Mongo Express, PgAdmin or Neo4j Browser) that allows easy interaction with the database.
+
+**Note**: the docker-compose file for PostGIS will automatically start up the application and geoserver as well.
 
 #### Mongo as database
 

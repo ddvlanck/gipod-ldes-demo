@@ -38,3 +38,15 @@ services:
       - GEOSERVER_ADMIN_USER=ldes
     depends_on:
       - db
+  app:
+    build: .
+    container_name: ldes-app
+    environment:
+      DB_TYPE: postgis
+      DB_PORT: 5432
+      DB_USER: ldes
+      DB_PASSWORD: ldes
+      DB_HOST: db
+      DB_DATABASE: mobility_hindrance
+    depends_on:
+      - db

@@ -40,7 +40,7 @@ export class Postgis implements IDatabaseClient {
 
     await tcpPortUsed.waitUntilUsedOnHost(configuration.database.port, configuration.database.host, 30_000, 300_000) // Try every 30 seconds, 5 minutes long
       .then(() => this.logger.info('Database is available and can be used.'))
-      .catch((error: any) => { this.logger.error('Unable to connect to database'); console.error(error) });
+      .catch((error: any) => { this.logger.error('Unable to connect to database'); throw new Error(error) });
   }
 
   public async close(): Promise<void> {

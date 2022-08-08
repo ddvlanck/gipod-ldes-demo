@@ -6,4 +6,4 @@ WORKDIR /app
 RUN npm ci
 RUN npm run build
 
-CMD ["node", "bin/runner.js"]
+CMD ["node", "bin/cli-runner.js"]
