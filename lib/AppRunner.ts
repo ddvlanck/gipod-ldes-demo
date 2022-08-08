@@ -45,6 +45,7 @@ export class AppRunner {
     this.logger.info(`Waiting for cron job to start.`);
 
     cron.schedule(`${startingMinute} * * * *`, async () => {
+      this.logger.info('Cron job has started.');
       const raw = await readFile(LOCATION_OF_CONFIG_STATE, 'utf8');
       const config = JSON.parse(raw);
 
