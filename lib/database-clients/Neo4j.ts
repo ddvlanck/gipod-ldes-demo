@@ -2,8 +2,11 @@ import { IDatabaseClient } from "../IDatabaseClient";
 import { Driver, driver, auth, Session } from 'neo4j-driver';
 import * as N3 from 'n3';
 import { configuration } from "../Configuration";
+import { getLoggerFor } from "../logging/LogUtils";
+const tcpPortUsed = require('tcp-port-used');
 
 export class Neo4j implements IDatabaseClient {
+  private readonly logger = getLoggerFor(this);
   private static instance: Neo4j;
   private readonly _client: Driver;
 
@@ -30,6 +33,9 @@ export class Neo4j implements IDatabaseClient {
   }
 
   public async provision(): Promise<void> {
+    await tcpPortUsed.waitUntilUsedOnHost(7474, 'localhost', 30_000, 300_000) // Try every 30 seconds, 5 minutes long
+      .then(() => this.logger.info('Database is available and can be used.'))
+      .catch((error: any) => { this.logger.error('Unable to connect to database'); console.error(error) });
     const session = this.createSession();
 
     try {

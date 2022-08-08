@@ -1,6 +1,8 @@
 import { MongoClient } from "mongodb";
 import { configuration } from "../Configuration";
 import { IDatabaseClient } from "../IDatabaseClient";
+import { getLoggerFor } from "../logging/LogUtils";
+const tcpPortUsed = require('tcp-port-used');
 
 // Only hindrances that have a consequence that matches one of the list below are added to the database
 const interestedConsequences = [
@@ -24,6 +26,7 @@ const interestedConsequences = [
 ];
 
 export class Mongo implements IDatabaseClient {
+  private readonly logger = getLoggerFor(this);
   private static instance: Mongo;
   private readonly _client: MongoClient;
 
@@ -47,7 +50,9 @@ export class Mongo implements IDatabaseClient {
   }
 
   public async provision(): Promise<void> {
-    console.log('Provisioning not needed for MongoDb');
+    await tcpPortUsed.waitUntilUsedOnHost(27017, 'localhost', 30_000, 300_000) // Try every 30 seconds, 5 minutes long
+      .then(() => this.logger.info('Database is available and can be used.'))
+      .catch((error: any) => { this.logger.error('Unable to connect to database'); console.error(error) });
   }
 
   public async connect(): Promise<MongoClient> {
