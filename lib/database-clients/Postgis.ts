@@ -1,20 +1,24 @@
-import { Pool, PoolClient } from "pg"
+import { Pool } from "pg"
 import { IDatabaseClient } from "../IDatabaseClient";
 import type * as RDF from '@rdfjs/types';
 import { DataFactory } from "rdf-data-factory";
+import { getLoggerFor } from "../logging/LogUtils";
+import { configuration } from "../Configuration";
+const tcpPortUsed = require('tcp-port-used');
 
 export class Postgis implements IDatabaseClient {
+  private readonly logger = getLoggerFor(this);
   private static instance: Postgis;
   private readonly _pool: Pool;
   public df: DataFactory;
 
   private constructor() {
     this._pool = new Pool({
-      user: 'ldes',
-      password: 'ldes',
-      host: 'localhost',
-      port: 5432,
-      database: 'mobility_hindrance'
+      user: configuration.database.user,
+      password: configuration.database.password,
+      host: configuration.database.host,
+      port: configuration.database.port,
+      database: configuration.database.database
     })
 
     this._pool.on('error', (err) => {
@@ -32,7 +36,11 @@ export class Postgis implements IDatabaseClient {
   }
 
   public async provision(): Promise<void> {
-    await this.pool.connect();
+    this.logger.info('Waiting for database to be available.');
+
+    await tcpPortUsed.waitUntilUsedOnHost(5432, 'localhost', 1000, 6000)
+      .then(() => this.logger.info('Database is available and can be used.'))
+      .catch((error: any) => { this.logger.error('Unable to connect to database'); console.error(error) });
   }
 
   public async close(): Promise<void> {
@@ -123,14 +131,14 @@ export class Postgis implements IDatabaseClient {
     const entityId = quads.find(x => x.subject.equals(this.df.namedNode(versionId)) && x.predicate.equals(this.df.namedNode('http://purl.org/dc/terms/isVersionOf')))?.object.value;
 
     if (!entityId) {
-      console.log(`Member ${versionId} has no entity id and will not be added to the database.`);
+      this.logger.warn(`Member ${versionId} has no entity id and will not be added to the database.`);
       return;
     }
 
     const createdOn = quads.find(x => x.predicate.equals(this.df.namedNode('http://purl.org/dc/terms/created')))?.object.value;
 
     if (!createdOn) {
-      console.log(`Member ${versionId} has not createdOn timestamp and will not be added to the database.`);
+      this.logger.warn(`Member ${versionId} has not createdOn timestamp and will not be added to the database.`);
       return;
     }
 
@@ -189,7 +197,7 @@ export class Postgis implements IDatabaseClient {
         }
       }
     } catch (err: unknown) {
-      console.log(`Error while querying version meta data.`);
+      this.logger.error(`Error while querying version meta data.`);
       console.error(err);
     } finally {
       client.release();
@@ -327,7 +335,7 @@ export class Postgis implements IDatabaseClient {
         ]
       );
     } catch (err: unknown) {
-      console.log(`Unnable to add ${versionId} to the database.`);
+      this.logger.error(`Unnable to add ${versionId} to the database.`);
       console.error(err);
     } finally {
       client.release();

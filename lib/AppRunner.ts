@@ -13,6 +13,7 @@ import { Neo4j } from "./database-clients/Neo4j";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { existsSync } from "fs";
 import { resolve } from "path";
+import { getLoggerFor } from "./logging/LogUtils";
 
 export const FOLDER_OF_STATE = resolve(`${__dirname}/../.ldes`);
 export const LOCATION_OF_STATE = `${FOLDER_OF_STATE}/state.json`;
@@ -25,6 +26,8 @@ export interface IAppRunnerArgs {
 }
 
 export class AppRunner {
+  private readonly logger = getLoggerFor(this);
+
   public runCliSync(process: NodeJS.Process): void {
     this.runCli(process.argv).catch((error): never => {
       stderr.write(error.message);
@@ -39,6 +42,7 @@ export class AppRunner {
   public async run(): Promise<void> {
     const startDate = new Date(Date.now());
     const startingMinute = moment(startDate).add(65, 'seconds').toDate().getMinutes();
+    this.logger.info(`Waiting for cron job to start.`);
 
     cron.schedule(`${startingMinute} * * * *`, async () => {
       const raw = await readFile(LOCATION_OF_CONFIG_STATE, 'utf8');
@@ -68,6 +72,7 @@ export class AppRunner {
       .alias('h', 'help');
 
     const params = await yargv.parse();
+    this.logger.debug(`Received following params: ${params}`);
     await this.persistConfig(params.d, params.u);
   }
 
