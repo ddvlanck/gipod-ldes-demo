@@ -87,3 +87,27 @@ For Mongo, within the `handleMember` function, we check if the mobility hindranc
 For every entity that is added to the database, we store the timestamp of its latest version. So, for every version of an entity that we receive, we query the timestamp collection/table to check if the timestamp of the received version is more recent than the one already in the database. If that is the case, the means the version that we received is more recent than the one in the database. So, then we update the database with the newest version for the entity, and we also update to timestamp collection/table with the timestamp of the newest version.
 
 **As timestamp, we use the `createdOn` field of a mobility hindrance, as this indicates at which time the 'event' occurred.**
+
+## Write to another backend
+
+The following section describes the process to add another backend that is currently not supported in this demo.
+
+1. Create a new typescript file in the folder `lib/database-clients` with a descriptive name `NewDatabase.ts`
+2. Create a new class in the above typescript file that implements the interface `IDatabaseClient`
+3. Extend the functions `getDbClient` and `getLdesOptions` in the [AppRunner class](./lib/AppRunner.ts)
+   1. `getDbClient` → type represents the value that is passed in the config through `database.type`
+   2. `getLdesOptions` → choose whether you want to receive the members as JSON objects or RDF quads (type is also passed in config through `database.type`)
+4. In the `handleMember` function of the `IDatabaseClient` you can access the member data as follows:
+   1. If you chose to get the members as objects, you can access the object as `member.object` (example in [Mongo class](./lib/database-clients/Mongo.ts))
+   2. If you chose to get the members as RDF quads, you can access them as `member.quads` (example in [PostGIS class](./lib/database-clients//Postgis.ts))
+
+5. Create a docker-compose file that spins up your backend (multiple examples available)
+6. Modify the configuration file ([`config.json`](./config.json)) 
+   1. Set database type
+   2. Add the necessary credentials to connect to your database
+
+7. There are two ways to start the script:
+   1. Add the script as a service in the docker-compose. Example in [PostGIS docker-compose](./docker-compose-postgis.yml)
+   2. CLI → `node bin/cli-runner.js` (if you are in the root)
+
+8. That's it!
