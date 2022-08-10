@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb";
-import { configuration } from "../Configuration";
+import { DatabaseConfiguration } from "../DatabaseConfiguration";
 import { IDatabaseClient } from "../IDatabaseClient";
 import { getLoggerFor } from "../logging/LogUtils";
 const tcpPortUsed = require('tcp-port-used');
@@ -28,11 +28,9 @@ const interestedConsequences = [
 export class Mongo implements IDatabaseClient {
   private readonly logger = getLoggerFor(this);
   private static instance: Mongo;
-  private readonly _client: MongoClient;
+  private _client: MongoClient | undefined;
 
-  private constructor() {
-    this._client = new MongoClient(configuration.database.connectionString);
-  }
+  private constructor() { }
 
   public static getInstance(): Mongo {
     if (!Mongo.instance) {
@@ -44,12 +42,18 @@ export class Mongo implements IDatabaseClient {
 
   private get client(): MongoClient {
     if (!this._client) {
-      new Error('Trying to access mongo client before it was initialized.');
+      throw new Error('Trying to access mongo client before it was initialized.');
     }
     return this._client;
   }
 
-  public async provision(): Promise<void> {
+  private set client(value: MongoClient) {
+    this._client = value;
+  }
+
+  public async provision(config: DatabaseConfiguration): Promise<void> {
+    this.client = new MongoClient(config.connectionString);
+
     await tcpPortUsed.waitUntilUsedOnHost(27017, 'localhost', 30_000, 300_000) // Try every 30 seconds, 5 minutes long
       .then(() => this.logger.info('Database is available and can be used.'))
       .catch((error: any) => { this.logger.error('Unable to connect to database'); console.error(error) });

@@ -3,28 +3,16 @@ import { IDatabaseClient } from "../IDatabaseClient";
 import type * as RDF from '@rdfjs/types';
 import { DataFactory } from "rdf-data-factory";
 import { getLoggerFor } from "../logging/LogUtils";
-import { configuration } from "../Configuration";
+import { DatabaseConfiguration } from "../DatabaseConfiguration";
 const tcpPortUsed = require('tcp-port-used');
 
 export class Postgis implements IDatabaseClient {
   private readonly logger = getLoggerFor(this);
   private static instance: Postgis;
-  private readonly _pool: Pool;
+  private _pool: Pool | undefined;
   public df: DataFactory;
 
   private constructor() {
-    this._pool = new Pool({
-      user: configuration.database.user,
-      password: configuration.database.password,
-      host: configuration.database.host,
-      port: configuration.database.port,
-      database: configuration.database.database
-    })
-
-    this._pool.on('error', (err) => {
-      console.error(err);
-    })
-
     this.df = new DataFactory();
   }
 
@@ -35,12 +23,28 @@ export class Postgis implements IDatabaseClient {
     return this._pool;
   }
 
-  public async provision(): Promise<void> {
-    this.logger.info('Waiting for database to be available.');
+  private set pool(value: Pool) {
+    this._pool = value;
+  }
 
-    await tcpPortUsed.waitUntilUsedOnHost(configuration.database.port, configuration.database.host, 30_000, 300_000) // Try every 30 seconds, 5 minutes long
-      .then(() => this.logger.info('Database is available and can be used.'))
-      .catch((error: any) => { this.logger.error('Unable to connect to database'); throw new Error(error) });
+  public async provision(config: DatabaseConfiguration): Promise<void> {
+    this.logger.info('Provisioning PostGIS database.');
+
+    this.pool = new Pool({
+      user: config.user,
+      password: config.password,
+      host: config.host,
+      port: config.port,
+      database: config.database
+    })
+
+    this.pool.on('error', (err) => {
+      console.error(err);
+    })
+
+    await tcpPortUsed.waitUntilUsedOnHost(config.port, config.host, 30_000, 300_000) // Try every 30 seconds, 5 minutes long
+      .then(() => this.logger.info('PostGIS is ready to be used.'))
+      .catch((error: any) => { this.logger.error('Unable to connect to PostGIS database'); throw new Error(error) });
   }
 
   public async close(): Promise<void> {

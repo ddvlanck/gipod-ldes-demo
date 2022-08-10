@@ -1,15 +1,16 @@
 import { readFileSync } from "fs";
+import { DatabaseConfiguration } from "./DatabaseConfiguration";
 
 export default class Configuration {
-  public database: { type: string, user: string, password: string, host: string, port: number, database: string, connectionString: string };
-  public url: string;
+  public database: DatabaseConfiguration;
+  public ldes: string;
 
-  public constructor() {
-    const raw = readFileSync('config.json', 'utf-8');
+  public constructor(path: string) {
+    const raw = readFileSync(path, 'utf-8');
     const config = JSON.parse(raw.trim());
 
     this.database = config.database;
-    this.url = config.ldes;
+    this.ldes = config.ldes;
 
     this.database.type = process.env.DB_TYPE || this.database.type;
     this.database.user = process.env.DB_USER || this.database.user;
@@ -24,5 +25,3 @@ export default class Configuration {
     this.database.connectionString = process.env.DB_CONNECTION_STRING || this.database.connectionString;
   }
 }
-
-export const configuration = new Configuration();

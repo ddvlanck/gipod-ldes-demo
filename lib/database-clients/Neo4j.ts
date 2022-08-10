@@ -1,21 +1,16 @@
 import { IDatabaseClient } from "../IDatabaseClient";
 import { Driver, driver, auth, Session } from 'neo4j-driver';
 import * as N3 from 'n3';
-import { configuration } from "../Configuration";
 import { getLoggerFor } from "../logging/LogUtils";
+import { DatabaseConfiguration } from "../DatabaseConfiguration";
 const tcpPortUsed = require('tcp-port-used');
 
 export class Neo4j implements IDatabaseClient {
   private readonly logger = getLoggerFor(this);
   private static instance: Neo4j;
-  private readonly _client: Driver;
+  private _client: Driver | undefined;
 
-  private constructor() {
-    this._client = driver(
-      configuration.database.connectionString,
-      auth.basic(configuration.database.user, configuration.database.password),
-    );
-  }
+  private constructor() {}
 
   public static getInstance(): Neo4j {
     if (!Neo4j.instance) {
@@ -32,7 +27,16 @@ export class Neo4j implements IDatabaseClient {
     return this._client;
   }
 
-  public async provision(): Promise<void> {
+  private set client(value: Driver) {
+    this._client = value;
+  }
+
+  public async provision(config: DatabaseConfiguration): Promise<void> {
+    this.client = driver(
+      config.connectionString,
+      auth.basic(config.user, config.password),
+    );
+
     await tcpPortUsed.waitUntilUsedOnHost(7474, 'localhost', 30_000, 300_000) // Try every 30 seconds, 5 minutes long
       .then(() => this.logger.info('Database is available and can be used.'))
       .catch((error: any) => { this.logger.error('Unable to connect to database'); console.error(error) });
@@ -56,6 +60,7 @@ export class Neo4j implements IDatabaseClient {
     return this._client.close();
   }
 
+  // FIXME: Neo4J throws error when a string contains apostrophe
   public async handleMember(member: any): Promise<void> {
     const writer = new N3.Writer({ format: 'text/turtle' });
     writer.addQuads(member.quads);

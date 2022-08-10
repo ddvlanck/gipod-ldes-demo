@@ -1,5 +1,7 @@
+import { DatabaseConfiguration } from "./DatabaseConfiguration";
+
 export interface IDatabaseClient {
-  provision: () => Promise<void>;
+  provision: (config: DatabaseConfiguration) => Promise<void>;
   handleMember: (member: any) => Promise<void>;
   close: () => Promise<void>
 }

@@ -1,4 +1,5 @@
 import { EventStream } from "@treecg/actor-init-ldes-client";
+import Configuration from "./Configuration";
 import { IDatabaseClient } from "./IDatabaseClient";
 import { getLoggerFor } from "./logging/LogUtils";
 import { onLdesClientPauzed } from "./utils";
@@ -8,15 +9,16 @@ export class App {
 
   private readonly dbClient: IDatabaseClient;
   private readonly ldes: EventStream;
+  private readonly config: Configuration;
 
-  public constructor(dbClient: IDatabaseClient, ldes: EventStream) {
+  public constructor(dbClient: IDatabaseClient, ldes: EventStream, config: Configuration) {
     this.dbClient = dbClient;
     this.ldes = ldes;
+    this.config = config;
   }
 
   public async init(): Promise<void> {
-    this.logger.info('Provisioning database.');
-    await this.dbClient.provision();
+    await this.dbClient.provision(this.config.database);
   }
 
   public async start(): Promise<void> {
