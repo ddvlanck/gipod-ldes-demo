@@ -36,3 +36,34 @@ ALTER TABLE ldes.mobility_hindrances
 
 COMMENT ON TABLE ldes.mobility_hindrances
   IS 'Stores mobility hindrance version objects.';
+
+CREATE INDEX IF NOT EXISTS ix_geometry
+    ON ldes.mobility_hindrances USING gist
+        (zone_geometry_wkt)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS ix_gipod_id
+    ON ldes.mobility_hindrances USING btree
+        (gipod_id ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS ix_period_end
+    ON ldes.mobility_hindrances USING btree
+        (period_end ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS ix_period_start
+    ON ldes.mobility_hindrances USING btree
+        (period_start ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS ix_version_id
+    ON ldes.mobility_hindrances USING btree
+        (version_id COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS ix_status
+    ON ldes.mobility_hindrances USING btree
+        (status COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+

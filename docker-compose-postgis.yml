@@ -3,6 +3,7 @@ version: "3.8"
 volumes:
   geoserver-data:
   geo-db-data:
+  ldes-app-data:
 
 services:
   db:
@@ -48,5 +49,8 @@ services:
       DB_PASSWORD: ldes
       DB_HOST: db
       DB_DATABASE: mobility_hindrance
+      NODE_OPTIONS: --max-old-space-size=8192
+    volumes:
+      - ldes-app-data:/app/.ldes
     depends_on:
       - db
