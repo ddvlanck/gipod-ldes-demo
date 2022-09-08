@@ -1,14 +1,13 @@
 import { EventStream } from "@treecg/actor-init-ldes-client";
-import { existsSync, readFileSync, mkdirSync, writeFileSync, createReadStream } from "fs";
+import { existsSync, readFileSync, mkdirSync, writeFileSync } from "fs";
 import { FOLDER_OF_STATE, LOCATION_OF_STATE } from "../lib/AppRunner";
-import { Mongo } from "./database-clients/Mongo";
-import { Quad } from '@rdfjs/types';
-import rdfParser from "rdf-parse";
-import * as N3 from 'n3';
-import { DataFactory } from "n3";
 import { IDatabaseClient } from "./IDatabaseClient";
+import { getLoggerFor } from "./logging/LogUtils";
 
 export async function onLdesClientPauzed(ldes: EventStream, dbClient: IDatabaseClient, tasks: Promise<void>[]): Promise<void> {
+  const logger = getLoggerFor('LdesClient');
+  logger.info(`Finishing all tasks and closing connection with database.`);
+
   // Waiting for all tasks to be finished before closing the client.
   await Promise.all(tasks);
 

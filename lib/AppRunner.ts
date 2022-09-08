@@ -36,31 +36,23 @@ export class AppRunner {
   }
 
   public async runCli(): Promise<void> {
-    const startDate = new Date(Date.now());
-    const startingMinute = moment(startDate).add(65, 'seconds').toDate().getMinutes();
-
     const cliConfig = new Configuration('config.json');
     await this.persistConfig(cliConfig);
 
-    this.logger.info(`Waiting for cron job to start.`);
+    const config = new Configuration(LOCATION_OF_CONFIG_STATE);
+    const app = this.createApp(config);
 
-    cron.schedule(`${startingMinute} * * * *`, async () => {
-      this.logger.info('Cron job has started.');
+    try {
+      app.init().then(() => app.start())
+    } catch (error: unknown) {
+      console.log(error);
+      await app.stop();
+    }
 
-      const config = new Configuration(LOCATION_OF_CONFIG_STATE);
-      const app = this.createApp(config);
-
-      try {
-        app.init().then(() => app.start())
-      } catch (error: unknown) {
-        console.log(error);
-        await app.stop();
-      }
-
-      setTimeout(() => {
-        app.stop();
-      }, 3_300_000);  // 55 minutes
-    });
+    setTimeout(() => {
+      this.logger.info(`Pausing the LDES client.`);
+      app.stop();
+    }, 3_300_000);  // 55 minutes
   }
 
   private createApp(config: Configuration): App {
