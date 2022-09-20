@@ -6,27 +6,12 @@ begin
     for f in select t. category, row_number() OVER () as id from ( select distinct(unnest(zone_consequence_label::text[][])) as category from mobility_hindrances) as t 
     LOOP
 
-        	EXECUTE format('CREATE VIEW "' || f.category || '" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, left(periode_start::text, 10) as time_start, left(periode_end::text, 10) as time_end, * from mobility_hindrances) as t where t.category = ''' || f.category ||''' ;');
+        	EXECUTE format('CREATE VIEW "' || f.category || '" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, left(period_start::text, 10) as time_start, left(period_end::text, 10) as time_end, * from mobility_hindrances) as t where t.category = ''' || f.category ||''' ;');
 
     END LOOP;
 end;
 $$
 LANGUAGE plpgsql;
-
-"""
-CREATE VIEW "Verboden voor + 3,5 ton" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Verboden voor + 3,5 ton';
-CREATE VIEW "Geen doorgang voor voetgangers" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Geen doorgang voor voetgangers';
-CREATE VIEW "Geen doorgang voor gemotoriseerd verkeer" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Geen doorgang voor gemotoriseerd verkeer';
-CREATE VIEW "Geen doorgang voor fietsers" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Geen doorgang voor fietsers';
-CREATE VIEW "Snelheidsbeperking" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Snelheidsbeperking';
-CREATE VIEW "Wisselend verkeer via verkeerslichten" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Wisselend verkeer via verkeerslichten';
-CREATE VIEW "Handelaars moeilijk bereikbaar" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Handelaars moeilijk bereikbaar';
-CREATE VIEW "Wisselend verkeer via verkeersborden" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Wisselend verkeer via verkeersborden';
-CREATE VIEW "Verboden voor + 7,5 ton" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Verboden voor + 7,5 ton';
-CREATE VIEW "Vermindering van rijstroken" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Vermindering van rijstroken';
-CREATE VIEW "Versmalde rijstroken" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Versmalde rijstroken';
-CREATE VIEW "Geen doorgang voor gemotoriseerd verkeer uitgezonderd plaatselijk verkeer" as select * from (select unnest(zone_consequence_label::text[][]) as category, ST_SETSRID(zone_geometry_wkt, 31370) as geometry, * from mobility_hindrances) as t where t.category = 'Geen doorgang voor gemotoriseerd verkeer uitgezonderd plaatselijk verkeer';
-"""
 
 create VIEW overview_stats as
 SELECT
@@ -59,10 +44,9 @@ order by period_start;
 
 create VIEW category as
 select distinct(unnest(zone_consequence_label::text[][]))
-from mobility_hindrance;
+from mobility_hindrances;
 
 
 create VIEW owner as
 select distinct(owner_preferred_name)
-from mobility_hindrance;
-
+from mobility_hindrances;
